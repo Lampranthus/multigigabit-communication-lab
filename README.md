@@ -42,39 +42,61 @@ cd corundum/modules/mqnic/
 sudo insmod mqnic.ko
 ```
 
-### 3. Server — Create and Configure Network Namespaces
+### 3. Server — Create, Configure Network Namespaces and Open a terminal for each namespace
 
 ```bash
-# Create namespaces
+# eth_ns (Ethernet 5G)
 sudo ip netns add eth_ns
-sudo ip netns add nic_ns
-sudo ip netns add corundum_ns
-
-# Configure eth_ns (onboard NIC)
 sudo ip link set eth0 netns eth_ns
 sudo ip netns exec eth_ns ip addr add 192.168.1.25/24 dev eth0
 sudo ip netns exec eth_ns ip link set eth0 up
 sudo ip netns exec eth_ns ip link set lo up
-
-# Configure nic_ns (10G/2.5G NIC)
+sudo ip netns exec eth_ns bash
+```
+```bash
+# nic_ns (10G NIC)
+sudo ip netns add nic_ns
 sudo ip link set nic0 netns nic_ns
 sudo ip netns exec nic_ns ip addr add 192.168.1.101/24 dev nic0
 sudo ip netns exec nic_ns ip link set nic0 up
 sudo ip netns exec nic_ns ip link set lo up
-
-# Configure corundum_ns (NetFPGA-SUME via Corundum)
-sudo ip link set corundum0 netns corundum_ns
-sudo ip netns exec corundum_ns ip addr add 192.168.1.100/24 dev corundum0
-sudo ip netns exec corundum_ns ip link set corundum0 up
-sudo ip netns exec corundum_ns ip link set lo up
-```
-
-Open a terminal for each namespace:
-
-```bash
-sudo ip netns exec eth_ns bash
 sudo ip netns exec nic_ns bash
-sudo ip netns exec corundum_ns bash
+```
+```bash
+# corundum0_ns (NetFPGA-SUME interface 0)
+sudo ip netns add corundum0_ns
+sudo ip link set corundum0 netns corundum0_ns
+sudo ip netns exec corundum0_ns ip addr add 192.168.1.100/24 dev corundum0
+sudo ip netns exec corundum0_ns ip link set corundum0 up
+sudo ip netns exec corundum0_ns ip link set lo up
+sudo ip netns exec corundum0_ns bash
+```
+```bash
+# corundum1_ns (NetFPGA-SUME interface 1)
+sudo ip netns add corundum1_ns
+sudo ip link set corundum1 netns corundum1_ns
+sudo ip netns exec corundum1_ns ip addr add 192.168.1.101/24 dev corundum1
+sudo ip netns exec corundum1_ns ip link set corundum1 up
+sudo ip netns exec corundum1_ns ip link set lo up
+sudo ip netns exec corundum1_ns bash
+```
+```bash
+# corundum2_ns (NetFPGA-SUME interface 2)
+sudo ip netns add corundum2_ns
+sudo ip link set corundum2 netns corundum2_ns
+sudo ip netns exec corundum2_ns ip addr add 192.168.1.102/24 dev corundum2
+sudo ip netns exec corundum2_ns ip link set corundum2 up
+sudo ip netns exec corundum2_ns ip link set lo up
+sudo ip netns exec corundum2_ns bash
+```
+```bash
+# corundum3_ns (NetFPGA-SUME interface 3)
+sudo ip netns add corundum3_ns
+sudo ip link set corundum3 netns corundum3_ns
+sudo ip netns exec corundum3_ns ip addr add 192.168.1.103/24 dev corundum3
+sudo ip netns exec corundum3_ns ip link set corundum3 up
+sudo ip netns exec corundum3_ns ip link set lo up
+sudo ip netns exec corundum3_ns bash
 ```
 
 ---

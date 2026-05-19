@@ -57,7 +57,7 @@ sudo ip netns exec eth_ns bash
 # nic_ns (10G NIC)
 sudo ip netns add nic_ns
 sudo ip link set nic0 netns nic_ns
-sudo ip netns exec nic_ns ip addr add 192.168.1.101/24 dev nic0
+sudo ip netns exec nic_ns ip addr add 192.168.1.110/24 dev nic0
 sudo ip netns exec nic_ns ip link set nic0 up
 sudo ip netns exec nic_ns ip link set lo up
 sudo ip netns exec nic_ns bash

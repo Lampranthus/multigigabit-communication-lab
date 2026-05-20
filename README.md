@@ -58,6 +58,7 @@ sudo ip netns exec eth_ns bash
 sudo ip netns add nic_ns
 sudo ip link set nic0 netns nic_ns
 sudo ip netns exec nic_ns ip addr add 192.168.1.110/24 dev nic0
+sudo ip netns exec nic_ns ip link set nic0 mtu 9000
 sudo ip netns exec nic_ns ip link set nic0 up
 sudo ip netns exec nic_ns ip link set lo up
 sudo ip netns exec nic_ns bash
@@ -67,38 +68,11 @@ sudo ip netns exec nic_ns bash
 sudo ip netns add corundum0_ns
 sudo ip link set corundum0 netns corundum0_ns
 sudo ip netns exec corundum0_ns ip addr add 192.168.1.100/24 dev corundum0
+sudo ip netns exec corundum0_ns ip link set corundum0 mtu 9000
 sudo ip netns exec corundum0_ns ip link set corundum0 up
 sudo ip netns exec corundum0_ns ip link set lo up
 sudo ip netns exec corundum0_ns bash
 ```
-```bash
-# corundum1_ns (NetFPGA-SUME interface 1)
-sudo ip netns add corundum1_ns
-sudo ip link set corundum1 netns corundum1_ns
-sudo ip netns exec corundum1_ns ip addr add 192.168.1.101/24 dev corundum1
-sudo ip netns exec corundum1_ns ip link set corundum1 up
-sudo ip netns exec corundum1_ns ip link set lo up
-sudo ip netns exec corundum1_ns bash
-```
-```bash
-# corundum2_ns (NetFPGA-SUME interface 2)
-sudo ip netns add corundum2_ns
-sudo ip link set corundum2 netns corundum2_ns
-sudo ip netns exec corundum2_ns ip addr add 192.168.1.102/24 dev corundum2
-sudo ip netns exec corundum2_ns ip link set corundum2 up
-sudo ip netns exec corundum2_ns ip link set lo up
-sudo ip netns exec corundum2_ns bash
-```
-```bash
-# corundum3_ns (NetFPGA-SUME interface 3)
-sudo ip netns add corundum3_ns
-sudo ip link set corundum3 netns corundum3_ns
-sudo ip netns exec corundum3_ns ip addr add 192.168.1.103/24 dev corundum3
-sudo ip netns exec corundum3_ns ip link set corundum3 up
-sudo ip netns exec corundum3_ns ip link set lo up
-sudo ip netns exec corundum3_ns bash
-```
-
 ---
 
 ### 4. Raspberry Pi — Create and Configure Network Namespace
@@ -142,8 +116,8 @@ sudo ip netns exec eth_ns bash
 | Device                     | Interface    | IP Address      |
 |----------------------------|--------------|-----------------|
 | Server (onboard NIC)       | eth0         | 192.168.1.25    |
-| Server (10G NIC)           | nic0         | 192.168.1.101   |
-| Server (NetFPGA / Corundum)| corundum0    | 192.168.1.100   |
+| Server (10G NIC)           | nic0         | 192.168.1.110   |
+| Server (Corundum)          | corundum0    | 192.168.1.100   |
 | Raspberry Pi 5             | eth0         | 192.168.1.11    |
 | Laptop                     | eth0         | 192.168.1.10    |
 

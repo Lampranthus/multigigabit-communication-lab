@@ -58,7 +58,6 @@ sudo ip netns exec eth_ns bash
 sudo ip netns add nic_ns
 sudo ip link set nic0 netns nic_ns
 sudo ip netns exec nic_ns ip addr add 192.168.1.110/24 dev nic0
-sudo ip netns exec nic_ns ip link set nic0 mtu 9000
 sudo ip netns exec nic_ns ip link set nic0 up
 sudo ip netns exec nic_ns ip link set lo up
 sudo ip netns exec nic_ns bash
@@ -68,7 +67,6 @@ sudo ip netns exec nic_ns bash
 sudo ip netns add corundum0_ns
 sudo ip link set corundum0 netns corundum0_ns
 sudo ip netns exec corundum0_ns ip addr add 192.168.1.100/24 dev corundum0
-sudo ip netns exec corundum0_ns ip link set corundum0 mtu 9000
 sudo ip netns exec corundum0_ns ip link set corundum0 up
 sudo ip netns exec corundum0_ns ip link set lo up
 sudo ip netns exec corundum0_ns bash
@@ -113,13 +111,13 @@ sudo ip netns exec eth_ns bash
 
 ## IP Address Summary
 
-| Device                     | Interface    | IP Address      |
-|----------------------------|--------------|-----------------|
-| Server (onboard NIC)       | eth0         | 192.168.1.25    |
-| Server (10G NIC)           | nic0         | 192.168.1.110   |
-| Server (Corundum)          | corundum0    | 192.168.1.100   |
-| Raspberry Pi 5             | eth0         | 192.168.1.11    |
-| Laptop                     | eth0         | 192.168.1.10    |
+| Device                     | Interface    | IP Address      | MAC Address        |
+|----------------------------|--------------|-----------------|--------------------|
+| Server (onboard NIC)       | eth0         | 192.168.1.25    | 34:5a:60:15:24:69  |
+| Server (10G NIC)           | nic0         | 192.168.1.110   | c4:62:37:02:44:8f  |
+| Server (Corundum)          | corundum0    | 192.168.1.100   | 00:18:3e:02:0f:4c  |
+| Raspberry Pi 5             | eth0         | 192.168.1.11    | d8:3a:dd:cb:3d:8b  |
+| Laptop                     | eth0         | 192.168.1.10    | c8:a3:62:c9:95:7b  |
 
 ---
 

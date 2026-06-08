@@ -1,0 +1,2 @@
+test,mode,payload_bytes,configured_packets,rx_packets,rx_bytes,elapsed_ns,fpga_rx_delta,fpga_tx_delta,fpga_rx_bad_delta,fpga_tx_bad_delta
+tx,constant,768,1000000,1000000,768000000,6672026922,2,1000001,0,0

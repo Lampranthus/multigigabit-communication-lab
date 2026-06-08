@@ -1,0 +1,2 @@
+test,payload_bytes,rtt_count,rtt_ok,rtt_lost,flood_duration_s,flood_tx_packets,flood_rx_packets,flood_rx_bytes,elapsed_ns,fpga_rx_delta,fpga_tx_delta,fpga_rx_bad_delta,fpga_tx_bad_delta
+loopback,1440,10000,10000,0,10.000000,4876515,829967,1195152480,10000002902,841398,841396,0,0

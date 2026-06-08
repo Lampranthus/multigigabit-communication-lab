@@ -48,14 +48,17 @@
 #define DEFAULT_TIMEOUT_MS 3000
 #define ETH_OVERHEAD_BYTES 66
 #define DEFAULT_IFACE "eth0"
+#define DEFAULT_HOST_IP "192.168.1.11"
 #define DEFAULT_FPGA_MAC "66:70:67:61:3A:30"
 #define DEFAULT_PHY_INIT_DELAY_US 50000
 #define DEFAULT_LOOPBACK_ENTRY_WAIT_MS 500
 #define DEFAULT_LOOPBACK_PRE_ENABLE_WAIT_MS 1000
 #define DEFAULT_LOOPBACK_POST_ENABLE_WAIT_MS 500
 #define DEFAULT_LOOPBACK_DRAIN_MS 1000
-#define DEFAULT_LOOPBACK_PRE_DISABLE_WAIT_MS 1000
+#define DEFAULT_LOOPBACK_PRE_DISABLE_WAIT_MS 2000
 #define DEFAULT_LOOPBACK_POST_DISABLE_WAIT_MS 500
+#define DEFAULT_PREFLIGHT_RETRIES 5
+#define DEFAULT_PREFLIGHT_RETRY_DELAY_MS 500
 
 static volatile sig_atomic_t g_stop = 0;
 
@@ -75,6 +78,7 @@ typedef struct {
     const char *out;
     const char *out_dir;
     const char *iface;
+    const char *host_ip;
     const char *fpga_mac;
     int arp_count;
     bool no_preflight;
@@ -86,6 +90,8 @@ typedef struct {
     int loopback_drain_ms;
     int loopback_pre_disable_wait_ms;
     int loopback_post_disable_wait_ms;
+    int preflight_retries;
+    int preflight_retry_delay_ms;
 } options_t;
 
 typedef struct {
@@ -223,12 +229,13 @@ static void defaults(options_t *o) {
     o->reg = -1;
     o->payload = 1440;
     o->rtt_count = 10000;
-    o->duration = 5;
+    o->duration = 10.0;
     o->pkt_count = 1000000;
     o->mode = "sequential";
     o->out = NULL;
     o->out_dir = ".";
     o->iface = DEFAULT_IFACE;
+    o->host_ip = DEFAULT_HOST_IP;
     o->fpga_mac = DEFAULT_FPGA_MAC;
     o->arp_count = 2;
     o->no_preflight = false;
@@ -240,6 +247,8 @@ static void defaults(options_t *o) {
     o->loopback_drain_ms = DEFAULT_LOOPBACK_DRAIN_MS;
     o->loopback_pre_disable_wait_ms = DEFAULT_LOOPBACK_PRE_DISABLE_WAIT_MS;
     o->loopback_post_disable_wait_ms = DEFAULT_LOOPBACK_POST_DISABLE_WAIT_MS;
+    o->preflight_retries = DEFAULT_PREFLIGHT_RETRIES;
+    o->preflight_retry_delay_ms = DEFAULT_PREFLIGHT_RETRY_DELAY_MS;
 }
 
 static int parse_opts(int argc, char **argv, int start, options_t *o) {
@@ -259,6 +268,7 @@ static int parse_opts(int argc, char **argv, int start, options_t *o) {
         else if (strcmp(argv[i], "--out") == 0 && i + 1 < argc) o->out = argv[++i];
         else if (strcmp(argv[i], "--out-dir") == 0 && i + 1 < argc) o->out_dir = argv[++i];
         else if (strcmp(argv[i], "--iface") == 0 && i + 1 < argc) o->iface = argv[++i];
+        else if (strcmp(argv[i], "--host-ip") == 0 && i + 1 < argc) o->host_ip = argv[++i];
         else if (strcmp(argv[i], "--fpga-mac") == 0 && i + 1 < argc) o->fpga_mac = argv[++i];
         else if (strcmp(argv[i], "--arp-count") == 0 && i + 1 < argc) o->arp_count = parse_int(argv[++i]);
         else if (strcmp(argv[i], "--no-preflight") == 0) o->no_preflight = true;
@@ -270,6 +280,8 @@ static int parse_opts(int argc, char **argv, int start, options_t *o) {
         else if (strcmp(argv[i], "--loopback-drain-ms") == 0 && i + 1 < argc) o->loopback_drain_ms = parse_int(argv[++i]);
         else if (strcmp(argv[i], "--loopback-pre-disable-wait-ms") == 0 && i + 1 < argc) o->loopback_pre_disable_wait_ms = parse_int(argv[++i]);
         else if (strcmp(argv[i], "--loopback-post-disable-wait-ms") == 0 && i + 1 < argc) o->loopback_post_disable_wait_ms = parse_int(argv[++i]);
+        else if (strcmp(argv[i], "--preflight-retries") == 0 && i + 1 < argc) o->preflight_retries = parse_int(argv[++i]);
+        else if (strcmp(argv[i], "--preflight-retry-delay-ms") == 0 && i + 1 < argc) o->preflight_retry_delay_ms = parse_int(argv[++i]);
         else {
             fprintf(stderr, "unknown or incomplete option: %s\n", argv[i]);
             return -1;
@@ -418,6 +430,24 @@ static int send_udpmtu_cmd(const options_t *o, int payload) {
     return send_bytes(o->fpga_ip, o->fpga_port, buf, pos);
 }
 
+static int send_host_ip_cmd(const options_t *o) {
+    uint8_t ipb[4];
+    if (inet_pton(AF_INET, o->host_ip, ipb) != 1) {
+        fprintf(stderr, "bad host ip: %s\n", o->host_ip);
+        return -1;
+    }
+
+    uint8_t buf[16];
+    size_t pos = 0;
+    memcpy(buf + pos, "ip_d", 4); pos += 4;
+    buf[pos++] = ipb[0];
+    buf[pos++] = ipb[1];
+    buf[pos++] = ipb[2];
+    buf[pos++] = ipb[3];
+    buf[pos++] = 0x00;
+    return send_bytes(o->fpga_ip, o->fpga_port, buf, pos);
+}
+
 static int send_mmd_write(const options_t *o, uint8_t dev, uint16_t reg, uint16_t value) {
     uint8_t buf[64];
     size_t pos;
@@ -514,6 +544,12 @@ static int arp_prepare(const options_t *o) {
 static int preflight(const options_t *o) {
     if (o->no_preflight) return 0;
 
+    if (send_host_ip_cmd(o) < 0) {
+        fprintf(stderr, "preflight failed: host destination IP config\n");
+        return -1;
+    }
+    usleep(100000);
+
     if (!o->no_phy_init) {
         if (phy_mmd_init(o) < 0) {
             fprintf(stderr, "preflight failed: MMD PHY init\n");
@@ -522,8 +558,17 @@ static int preflight(const options_t *o) {
     }
 
     status_t s;
-    if (fpga_snapshot(o, &s) < 0) {
-        fprintf(stderr, "preflight failed: FPGA did not answer regstats\n");
+    int ok = 0;
+    int retries = o->preflight_retries > 0 ? o->preflight_retries : 1;
+    for (int attempt = 1; attempt <= retries; ++attempt) {
+        if (fpga_snapshot(o, &s) == 0) {
+            ok = 1;
+            break;
+        }
+        usleep((useconds_t)o->preflight_retry_delay_ms * 1000U);
+    }
+    if (!ok) {
+        fprintf(stderr, "preflight failed: FPGA did not answer regstats after %d attempts\n", retries);
         return -1;
     }
 
@@ -1051,7 +1096,8 @@ static void usage(const char *prog) {
         "\ncommon opts:\n"
         "  --fpga-ip IP --fpga-port N --data-port N --rx-port N --timeout-ms N\n"
         "  --payload N --out FILE --out-dir DIR\n"
-        "  --iface eth0 --fpga-mac 66:70:67:61:3A:30 --arp-count 2\n"
+        "  --iface eth0 --host-ip 192.168.1.11 --fpga-mac 66:70:67:61:3A:30 --arp-count 5\n"
+        "  --preflight-retries N --preflight-retry-delay-ms N\n"
         "  --no-preflight --no-phy-init --no-arp\n"
         "\nloopback opts:\n"
         "  --rtt-count N --duration SEC\n"

@@ -13,6 +13,7 @@ Example:
     --device server-nic0:/path/test/server/nic0/runs \
     --device corundum0:/path/test/server/corundum0/runs \
     --device raspberry:/path/test/raspberry/eth0/runs \
+    --device pc:/path/test/pc/eth0/runs \
     --out compare_report
 """
 

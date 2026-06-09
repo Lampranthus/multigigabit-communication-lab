@@ -6,6 +6,7 @@
 - `server-nic0`: `test/server/nic0/runs`
 - `corundum0`: `test/server/corundum0/runs`
 - `raspberry`: `test/raspberry/eth0/runs`
+- `pc`: `test/pc/eth0/runs`
 
 ## Graficas
 

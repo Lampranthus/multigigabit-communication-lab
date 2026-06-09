@@ -12,4 +12,5 @@ PYTHON="${PYTHON:-python3}"
   --device "server-nic0:${BASE}/server/nic0/runs" \
   --device "corundum0:${BASE}/server/corundum0/runs" \
   --device "raspberry:${BASE}/raspberry/eth0/runs" \
+  --device "pc:${BASE}/pc/eth0/runs" \
   --out "${OUT}"

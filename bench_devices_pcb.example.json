@@ -1,0 +1,47 @@
+{
+  "port": 5050,
+  "defaults": {
+    "fpga_ip": "192.168.1.12",
+    "sizes": [1440, 1280, 1024, 768, 512, 256],
+    "reps": 3,
+    "rtt_count": 10000,
+    "duration": 10,
+    "pkt_count": 1000000,
+    "tx_modes": ["random"],
+    "recovery_delay": 3,
+    "extra_args": [
+      "--preflight-retries", "10",
+      "--preflight-retry-delay-ms", "1000"
+    ]
+  },
+  "devices": [
+    {
+      "label": "server-eth0",
+      "control_ip": "192.168.0.25",
+      "host_ip": "192.168.1.25",
+      "iface": "eth0",
+      "out_root": "test/server/eth0/runs"
+    },
+    {
+      "label": "server-nic0",
+      "control_ip": "192.168.0.25",
+      "host_ip": "192.168.1.110",
+      "iface": "nic0",
+      "out_root": "test/server/nic0/runs"
+    },
+    {
+      "label": "server-corundum0",
+      "control_ip": "192.168.0.25",
+      "host_ip": "192.168.1.100",
+      "iface": "corundum0",
+      "out_root": "test/server/corundum0/runs"
+    },
+    {
+      "label": "raspberry-eth0",
+      "control_ip": "192.168.0.11",
+      "host_ip": "192.168.1.11",
+      "iface": "eth0",
+      "out_root": "test/raspberry/eth0/runs"
+    }
+  ]
+}
